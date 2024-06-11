@@ -13,6 +13,26 @@ from .rome_hparams import ROMEHyperParams
 
 CONTEXT_TEMPLATES_CACHE = None
 
+def get_model_distance(original_model, model_new, model_hpar):
+    state_dict_original = original_model.state_dict()
+    state_dict_new = model_new.state_dict()
+
+    distances_dict = {}
+    for layer in model_hpar.layers:
+        if isinstance(layer, str) and "transformer" in layer:
+            rewrite_layer = layer
+        else:
+            rewrite_layer = model_hpar.rewrite_module_tmp.format(str(layer)) + ".weight"
+
+        distance = (
+            torch.norm(
+                state_dict_original[rewrite_layer] - state_dict_new[rewrite_layer].cpu()
+            )
+            / state_dict_original[rewrite_layer].numel()
+        )
+        distances_dict[layer] = distance.detach().cpu().item()
+
+    return distances_dict
 
 def apply_rome_to_model(
     model: AutoModelForCausalLM,
@@ -30,7 +50,7 @@ def apply_rome_to_model(
 
     :return: (1) the updated model, (2) an original copy of the weights that changed
     """
-
+    original_model = deepcopy(model)
     if copy:
         model = deepcopy(model)
 
@@ -52,7 +72,7 @@ def apply_rome_to_model(
                 w[...] += upd_matrix
 
         print(f"New weights successfully inserted into {list(deltas.keys())}")
-
+        print(get_model_distance(original_model, model, weights_copy))
     return model, weights_copy
 
 
