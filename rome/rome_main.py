@@ -72,7 +72,7 @@ def apply_rome_to_model(
                 w[...] += upd_matrix
 
         print(f"New weights successfully inserted into {list(deltas.keys())}")
-        print(get_model_distance(original_model, model, weights_copy))
+        print(get_model_distance(original_model, model, hparams))
     return model, weights_copy
 
 
