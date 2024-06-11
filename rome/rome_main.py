@@ -26,7 +26,7 @@ def get_model_distance(original_model, model_new, model_hpar):
 
         distance = (
             torch.norm(
-                state_dict_original[rewrite_layer] - state_dict_new[rewrite_layer].cpu()
+                state_dict_original[rewrite_layer] - state_dict_new[rewrite_layer]
             )
             / state_dict_original[rewrite_layer].numel()
         )
